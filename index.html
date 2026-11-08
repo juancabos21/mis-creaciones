@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Zero - Asistente Virtual</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1a3fd4">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Zero">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        body { 
+            background: #1a3fd4; 
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            overflow-x: hidden; 
+            transition: background 0.5s ease; 
+            min-height: 100vh;
+        }
+        body.light-theme { background: #f0f4ff; }
+        
+        body.has-image-bg::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        .hero { 
+            min-height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 2rem; 
+            padding: 1.5rem; 
+            position: relative; 
+            z-index: 1; 
+        }
+        
+        .buttons-left, .buttons-right { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 0.6rem; 
+            min-height: auto;
+            padding: 0.3rem;
+            flex: 1;
+            max-width: 180px;
+        }
+
+        .btn {
+            display: flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.6rem; border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.8); background: rgba(255, 255, 255, 0.08);
+            cursor: grab; transition: all 0.3s ease; text-decoration: none; color: white;
+            font-weight: 600; font-size: 0.75rem; min-width: 100px; max-width: 160px; height: 38px;
+            animation: pulse 2.5s ease-in-out infinite; backdrop-filter: blur(5px); user-select: none;
+        }
+        .btn .icon { font-size: 1rem; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 6px; flex-shrink: 0; }
+        .btn:hover { transform: scale(1.05); border-color: #ffffff; z-index: 10; }
+        .btn.dragging { opacity: 0.5; cursor: grabbing; transform: scale(1.1); z-index: 1000; }
+        .btn.drag-over { border-color: #ffd700; background: rgba(255, 215, 0, 0.2); transform: scale(1.05); }
+
+        @keyframes pulse { 0%, 100% { box-shadow: 0 0 5px rgba(255, 255, 255, 0.3); } 50% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.6); } }
+
+        .btn-tiktok { border-color: #00f2ea; background: rgba(0, 0, 0, 0.4); }
+        .btn-tiktok .icon { background: linear-gradient(135deg, #ff0050, #00f2ea); }
+        .btn-tiktok:hover { background: rgba(0, 0, 0, 0.6); box-shadow: 0 0 20px rgba(0, 242, 234, 0.6); }
+
+        .btn-google { border-color: #4285f4; background: rgba(66, 133, 244, 0.15); }
+        .btn-google .icon { background: #4285f4; }
+        .btn-google:hover { background: rgba(66, 133, 244, 0.3); box-shadow: 0 0 20px rgba(66, 133, 244, 0.6); }
+
+        .btn-instagram { border-color: #e1306c; background: rgba(225, 48, 108, 0.15); }
+        .btn-instagram .icon { background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+        .btn-instagram:hover { background: rgba(225, 48, 108, 0.3); box-shadow: 0 0 20px rgba(225, 48, 108, 0.6); }
+
+        .btn-spotify { border-color: #1ed760; background: rgba(30, 215, 96, 0.15); }
+        .btn-spotify .icon { background: #1ed760; }
+        .btn-spotify:hover { background: rgba(30, 215, 96, 0.3); box-shadow: 0 0 20px rgba(30, 215, 96, 0.6); }
+
+        .btn-facebook { border-color: #1877f2; background: rgba(24, 119, 242, 0.15); }
+        .btn-facebook .icon { background: #1877f2; font-weight: bold; }
+        .btn-facebook:hover { background: rgba(24, 119, 242, 0.3); box-shadow: 0 0 20px rgba(24, 119, 242, 0.6); }
+
+        .btn-netflix { border-color: #e50914; background: rgba(229, 9, 20, 0.15); }
+        .btn-netflix .icon { background: #e50914; font-weight: bold; font-size: 0.85rem; }
+        .btn-netflix:hover { background: rgba(229, 9, 20, 0.3); box-shadow: 0 0 20px rgba(229, 9, 20, 0.6); }
+
+        .btn-traductor { border-color: #4285F4; background: rgba(66, 133, 244, 0.15); }
+        .btn-traductor .icon { background: linear-gradient(135deg, #4285F4, #34A853, #FBBC05, #EA4335); }
+        .btn-traductor:hover { background: rgba(66, 133, 244, 0.3); box-shadow: 0 0 20px rgba(66, 133, 244, 0.6); }
+
+        .btn-recuerda { border-color: #a855f7; background: rgba(168, 85, 247, 0.15); }
+        .btn-recuerda .icon { background: #a855f7; }
+        .btn-recuerda:hover { background: rgba(168, 85, 247, 0.3); box-shadow: 0 0 20px rgba(168, 85, 247, 0.6); }
+
+        .btn-microfono { border-color: #f97316; background: rgba(249, 115, 22, 0.15); }
+        .btn-microfono .icon { background: #f97316; }
+        .btn-microfono:hover { background: rgba(249, 115, 22, 0.3); box-shadow: 0 0 20px rgba(249, 115, 22, 0.6); }
+
+        .btn-altavoz { border-color: #06b6d4; background: rgba(6, 182, 212, 0.15); }
+        .btn-altavoz .icon { background: #06b6d4; }
+        .btn-altavoz:hover { background: rgba(6, 182, 212, 0.3); box-shadow: 0 0 20px rgba(6, 182, 212, 0.6); }
+
+        .btn-tema { border-color: #fbbf24; background: rgba(251, 191, 36, 0.15); }
+        .btn-tema .icon { background: #fbbf24; }
+        .btn-tema:hover { background: rgba(251, 191, 36, 0.3); box-shadow: 0 0 20px rgba(251, 191, 36, 0.6); }
+
+        .btn-wikipedia { border-color: #636466; background: rgba(99, 100, 102, 0.2); }
+        .btn-wikipedia .icon { background: #636466; font-weight: bold; font-size: 0.9rem; }
+        .btn-wikipedia:hover { background: rgba(99, 100, 102, 0.4); box-shadow: 0 0 20px rgba(99, 100, 102, 0.6); }
+
+        .btn-radios { border-color: #f59e0b; background: rgba(245, 158, 11, 0.15); }
+        .btn-radios .icon { background: #f59e0b; }
+        .btn-radios:hover { background: rgba(245, 158, 11, 0.3); box-shadow: 0 0 20px rgba(245, 158, 11, 0.6); }
+
+        .btn-hora { border-color: #00d4ff; background: rgba(0, 212, 255, 0.15); font-variant-numeric: tabular-nums; }
+        .btn-hora .icon { background: #00d4ff; }
+        .btn-hora:hover { background: rgba(0, 212, 255, 0.3); box-shadow: 0 0 20px rgba(0, 212, 255, 0.6); }
+
+        .btn-background { border-color: #fbbf24; background: rgba(251, 191, 36, 0.15); }
+        .btn-background .icon { background: #fbbf24; }
+        .btn-background:hover { background: rgba(251, 191, 36, 0.3); box-shadow: 0 0 20px rgba(251, 191, 36, 0.6); }
+
+        /* ===== MARCO DE ZERO ===== */
+        .robot-frame {
+            position: relative;
+            background: rgba(255, 255, 255, 0.02); 
+            border: 3px solid #ffffff; 
+            border-radius: 15px; 
+            padding: 0.1rem;
+            box-shadow: 0 0 5px #ffffff, 0 0 15px #ffffff, 0 0 30px rgba(255, 255, 255, 0.8), 0 0 50px rgba(255, 255, 255, 0.4), inset 0 0 10px rgba(255, 255, 255, 0.3);
+            animation: float 3s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+        .robot-center { position: relative; display: flex; flex-direction: column; align-items: center; }
+        .robot-center img { max-width: 280px; height: auto; display: block; filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3)); }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        /* ===== BOTONES CIRCULARES FIJOS ===== */
+        .robot-controls {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+            padding: 0 5px;
+        }
+
+        .robot-controls-bottom {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+            padding: 0 5px;
+        }
+
+        .robot-fab {
+            width: 40px; height: 40px; border-radius: 50%; border: 2px solid #ffffff;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; transition: all 0.3s ease;
+            background-size: cover; background-position: center; flex-shrink: 0; text-decoration: none;
+        }
+        .robot-fab:hover { transform: scale(1.15); }
+
+        .robot-fab.calendar-fab { background: linear-gradient(135deg, #ff6b6b, #ee5a6f); box-shadow: 0 0 8px rgba(255, 107, 107, 0.6); animation: pulseCalendar 2s infinite; }
+        .robot-fab.calendar-fab:hover { box-shadow: 0 0 15px rgba(255, 107, 107, 0.9); }
+        @keyframes pulseCalendar { 0%, 100% { box-shadow: 0 0 8px rgba(255, 107, 107, 0.6); } 50% { box-shadow: 0 0 15px rgba(255, 107, 107, 0.9); } }
+
+        .robot-fab.weather-fab { background: linear-gradient(135deg, #00d4ff, #0099cc); box-shadow: 0 0 8px rgba(0, 212, 255, 0.6); animation: pulseWeather 2s infinite; }
+        .robot-fab.weather-fab:hover { box-shadow: 0 0 15px rgba(0, 212, 255, 0.9); }
+        @keyframes pulseWeather { 0%, 100% { box-shadow: 0 0 8px rgba(0, 212, 255, 0.6); } 50% { box-shadow: 0 0 15px rgba(0, 212, 255, 0.9); } }
+
+        .robot-fab.help-fab { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 0 8px rgba(16, 185, 129, 0.6); animation: pulseHelp 2s infinite; }
+        .robot-fab.help-fab:hover { box-shadow: 0 0 15px rgba(16, 185, 129, 0.9); }
+        @keyframes pulseHelp { 0%, 100% { box-shadow: 0 0 8px rgba(16, 185, 129, 0.6); } 50% { box-shadow: 0 0 15px rgba(16, 185, 129, 0.9); } }
+
+        .robot-fab.calc-fab { background: linear-gradient(135deg, #f472b6, #db2777); box-shadow: 0 0 8px rgba(244, 114, 182, 0.6); animation: pulseCalc 2s infinite; }
+        .robot-fab.calc-fab:hover { box-shadow: 0 0 15px rgba(244, 114, 182, 0.9); }
+        @keyframes pulseCalc { 0%, 100% { box-shadow: 0 0 8px rgba(244, 114, 182, 0.6); } 50% { box-shadow: 0 0 15px rgba(244, 114, 182, 0.9); } }
+
+        .robot-fab.youtube-fab { background: linear-gradient(135deg, #ff0000, #cc0000); box-shadow: 0 0 8px rgba(255, 0, 0, 0.6); animation: pulseYoutube 2s infinite; }
+        .robot-fab.youtube-fab:hover { box-shadow: 0 0 15px rgba(255, 0, 0, 0.9); }
+        @keyframes pulseYoutube { 0%, 100% { box-shadow: 0 0 8px rgba(255, 0, 0, 0.6); } 50% { box-shadow: 0 0 15px rgba(255, 0, 0, 0.9); } }
+
+        .robot-fab.whatsapp-fab { background: linear-gradient(135deg, #25D366, #128C7E); box-shadow: 0 0 8px rgba(37, 211, 102, 0.6); animation: pulseWhatsapp 2s infinite; }
+        .robot-fab.whatsapp-fab:hover { box-shadow: 0 0 15px rgba(37, 211, 102, 0.9); }
+        @keyframes pulseWhatsapp { 0%, 100% { box-shadow: 0 0 8px rgba(37, 211, 102, 0.6); } 50% { box-shadow: 0 0 15px rgba(37, 211, 102, 0.9); } }
+
+        .robot-fab.gmail-fab { background: linear-gradient(135deg, #EA4335, #c5221f); box-shadow: 0 0 8px rgba(234, 67, 53, 0.6); animation: pulseGmail 2s infinite; }
+        .robot-fab.gmail-fab:hover { box-shadow: 0 0 15px rgba(234, 67, 53, 0.9); }
+        @keyframes pulseGmail { 0%, 100% { box-shadow: 0 0 8px rgba(234, 67, 53, 0.6); } 50% { box-shadow: 0 0 15px rgba(234, 67, 53, 0.9); } }
+
+        .robot-fab.telegram-fab { background: linear-gradient(135deg, #0088cc, #006699); box-shadow: 0 0 8px rgba(0, 136, 204, 0.6); animation: pulseTelegram 2s infinite; }
+        .robot-fab.telegram-fab:hover { box-shadow: 0 0 15px rgba(0, 136, 204, 0.9); }
+        @keyframes pulseTelegram { 0%, 100% { box-shadow: 0 0 8px rgba(0, 136, 204, 0.6); } 50% { box-shadow: 0 0 15px rgba(0, 136, 204, 0.9); } }
+
+        /* PANELES LATERALES */
+        .weather-panel, .calendar-panel {
+            position: fixed; width: 350px; max-width: 85vw; height: 100vh;
+            background: linear-gradient(180deg, #0a1e5c 0%, #1a3fd4 50%, #0f2a8a 100%);
+            border: 3px solid #ffffff; z-index: 1000; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            overflow-y: auto; padding: 2rem 1.2rem;
+        }
+        .weather-panel { top: 0; right: -380px; border-left: 3px solid #ffffff; box-shadow: -10px 0 40px rgba(0,0,0,0.5); }
+        .weather-panel.active { right: 0; }
+        .calendar-panel { top: 0; left: -380px; border-right: 3px solid #ffffff; box-shadow: 10px 0 40px rgba(0,0,0,0.5); }
+        .calendar-panel.active { left: 0; }
+
+        .help-panel {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9);
+            width: 460px; max-width: 90vw; height: 75vh;
+            background: linear-gradient(180deg, #0a1e5c 0%, #1a3fd4 50%, #0f2a8a 100%);
+            border: 3px solid #ffffff; border-radius: 20px; box-shadow: 0 10px 50px rgba(0,0,0,0.6);
+            z-index: 1000; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            overflow-y: auto; padding: 1.5rem 1.2rem; opacity: 0; pointer-events: none;
+        }
+        .help-panel.active { opacity: 1; pointer-events: all; transform: translate(-50%, -50%) scale(1); }
+
+        .calc-panel {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+            width: 380px; max-width: 90vw;
+            background: linear-gradient(180deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+            border: 3px solid #ffffff; border-radius: 20px; box-shadow: 0 10px 50px rgba(0,0,0,0.6);
+            z-index: 1000; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            padding: 1.2rem; opacity: 0; pointer-events: none;
+        }
+        .calc-panel.active { opacity: 1; pointer-events: all; transform: translate(-50%, -50%) scale(1); }
+
+        .memory-panel {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+            width: 420px; max-width: 90vw; max-height: 85vh;
+            background: linear-gradient(180deg, #3b0764 0%, #581c87 50%, #6b21a8 100%);
+            border: 3px solid #ffffff; border-radius: 20px; box-shadow: 0 10px 50px rgba(0,0,0,0.6);
+            z-index: 1000; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            padding: 1.5rem; opacity: 0; pointer-events: none; overflow-y: auto;
+        }
+        .memory-panel.active { opacity: 1; pointer-events: all; transform: translate(-50%, -50%) scale(1); }
+        .memory-panel::-webkit-scrollbar { width: 8px; }
+        .memory-panel::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 10px; }
+
+        .memory-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.8rem; margin-bottom: 1.2rem; }
+        .memory-action-btn {
+            padding: 1rem; border: 2px solid rgba(255,255,255,0.3); border-radius: 12px;
+            background: rgba(255,255,255,0.1); color: white; cursor: pointer; transition: all 0.3s;
+            display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+            font-weight: 600; font-size: 0.9rem;
+        }
+        .memory-action-btn:hover { transform: translateY(-3px); background: rgba(255,255,255,0.2); }
+        .memory-action-btn .action-icon { font-size: 2rem; }
+        .memory-action-btn.view { border-color: #a855f7; background: rgba(168, 85, 247, 0.2); }
+        .memory-action-btn.view:hover { background: rgba(168, 85, 247, 0.4); box-shadow: 0 5px 15px rgba(168, 85, 247, 0.5); }
+        .memory-action-btn.export { border-color: #10b981; background: rgba(16, 185, 129, 0.2); }
+        .memory-action-btn.export:hover { background: rgba(16, 185, 129, 0.4); box-shadow: 0 5px 15px rgba(16, 185, 129, 0.5); }
+        .memory-action-btn.import { border-color: #06b6d4; background: rgba(6, 182, 212, 0.2); }
+        .memory-action-btn.import:hover { background: rgba(6, 182, 212, 0.4); box-shadow: 0 5px 15px rgba(6, 182, 212, 0.5); }
+        .memory-action-btn.delete { border-color: #ef4444; background: rgba(239, 68, 68, 0.2); }
+        .memory-action-btn.delete:hover { background: rgba(239, 68, 68, 0.4); box-shadow: 0 5px 15px rgba(239, 68, 68, 0.5); }
+
+        .memory-stats { background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 1rem; margin-bottom: 1.2rem; text-align: center; }
+        .memory-stats .stats-number { font-size: 2.5rem; font-weight: 800; color: #a855f7; text-shadow: 0 0 15px rgba(168, 85, 247, 0.6); }
+        .memory-stats .stats-label { color: rgba(255,255,255,0.8); font-size: 0.9rem; margin-top: 0.3rem; }
+
+        .memory-list { background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 1rem; max-height: 300px; overflow-y: auto; }
+        .memory-list::-webkit-scrollbar { width: 6px; }
+        .memory-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 10px; }
+        .memory-list h4 { color: #a855f7; font-size: 1rem; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.5rem; }
+        .memory-item { background: rgba(255,255,255,0.08); border-left: 3px solid #a855f7; border-radius: 8px; padding: 0.8rem; margin-bottom: 0.6rem; color: rgba(255,255,255,0.95); }
+        .memory-item:last-child { margin-bottom: 0; }
+        .memory-item .item-text { font-size: 0.95rem; margin-bottom: 0.3rem; line-height: 1.4; }
+        .memory-item .item-date { font-size: 0.75rem; color: rgba(255,255,255,0.6); }
+        .memory-empty { text-align: center; padding: 2rem 1rem; color: rgba(255,255,255,0.6); }
+        .memory-empty .empty-icon { font-size: 3rem; margin-bottom: 0.5rem; }
+
+        /* ===== PANEL DE FONDOS ===== */
+        .background-panel {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+            width: 450px; max-width: 90vw; max-height: 85vh;
+            background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 50%, #1d4ed8 100%);
+            border: 3px solid #ffffff; border-radius: 20px; box-shadow: 0 10px 50px rgba(0,0,0,0.6);
+            z-index: 1000; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            padding: 1.5rem; opacity: 0; pointer-events: none; overflow-y: auto;
+        }
+        .background-panel.active { opacity: 1; pointer-events: all; transform: translate(-50%, -50%) scale(1); }
+        .background-panel::-webkit-scrollbar { width: 8px; }
+        .background-panel::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 10px; }
+
+        .bg-section { margin-bottom: 1.5rem; }
+        .bg-section h3 { color: #fbbf24; font-size: 1.1rem; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.5rem; }
+
+        .color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.8rem; }
+        .color-option {
+            width: 100%; aspect-ratio: 1; border-radius: 12px; cursor: pointer;
+            border: 3px solid rgba(255,255,255,0.3); transition: all 0.3s;
+            position: relative; overflow: hidden;
+        }
+        .color-option:hover { transform: scale(1.1); border-color: white; box-shadow: 0 0 15px rgba(255,255,255,0.5); }
+        .color-option.active { border-color: #fbbf24; box-shadow: 0 0 20px rgba(251, 191, 36, 0.8); }
+        .color-option.active::after {
+            content: '✓'; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: white; font-size: 1.5rem; font-weight: bold;
+            text-shadow: 0 0 5px rgba(0,0,0,0.8);
+        }
+
+        .bg-upload-btn {
+            width: 100%; padding: 1rem; border: 2px dashed rgba(255,255,255,0.5);
+            border-radius: 12px; background: rgba(255,255,255,0.1); color: white;
+            cursor: pointer; transition: all 0.3s; display: flex; flex-direction: column;
+            align-items: center; gap: 0.5rem; font-weight: 600;
+        }
+        .bg-upload-btn:hover { background: rgba(255,255,255,0.2); border-color: white; }
+        .bg-upload-btn .upload-icon { font-size: 2rem; }
+
+        .bg-preview {
+            width: 100%; height: 120px; border-radius: 12px; margin-top: 1rem;
+            background-size: cover; background-position: center;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .bg-reset-btn {
+            width: 100%; padding: 0.8rem; border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 10px; background: rgba(239, 68, 68, 0.2); color: white;
+            cursor: pointer; transition: all 0.3s; font-weight: 600; margin-top: 0.5rem;
+        }
+        .bg-reset-btn:hover { background: rgba(239, 68, 68, 0.4); border-color: #ef4444; }
+
+        .weather-panel::-webkit-scrollbar, .calendar-panel::-webkit-scrollbar, .help-panel::-webkit-scrollbar, .calc-panel::-webkit-scrollbar { width: 8px; }
+        .weather-panel::-webkit-scrollbar-thumb, .calendar-panel::-webkit-scrollbar-thumb, .help-panel::-webkit-scrollbar-thumb, .calc-panel::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 10px; }
+
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.8rem; border-bottom: 2px solid rgba(255, 255, 255, 0.2); }
+        .panel-header h2 { color: white; font-size: 1.3rem; display: flex; align-items: center; gap: 0.5rem; }
+        .panel-close { background: rgba(255, 255, 255, 0.15); border: 2px solid white; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1rem; transition: all 0.3s; display: flex; align-items: center; justify-content: center; }
+        .panel-close:hover { background: rgba(255, 255, 255, 0.3); transform: rotate(90deg); }
+
+        .weather-location { color: rgba(255,255,255,0.8); font-size: 0.9rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+        .weather-update { color: rgba(255,255,255,0.6); font-size: 0.75rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .weather-update .refresh-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.2rem 0.6rem; border-radius: 10px; cursor: pointer; font-size: 0.7rem; transition: all 0.3s; }
+        .weather-update .refresh-btn:hover { background: rgba(255,255,255,0.3); }
+        .weather-main { text-align: center; padding: 1.5rem 1rem; background: rgba(255,255,255,0.08); border-radius: 20px; border: 2px solid rgba(255,255,255,0.2); margin-bottom: 1rem; }
+        .weather-icon-big { font-size: 4.5rem; filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6)); }
+        .weather-temp { font-size: 4rem; font-weight: 800; color: white; line-height: 1; }
+        .weather-temp span { font-size: 1.8rem; vertical-align: top; }
+        .weather-condition { color: rgba(255,255,255,0.9); font-size: 1.1rem; font-weight: 600; margin: 0.5rem 0; }
+        .weather-feels { color: rgba(255,255,255,0.7); font-size: 0.85rem; }
+        .weather-details { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.8rem; margin-bottom: 1rem; }
+        .weather-detail-card { background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 0.8rem; text-align: center; transition: all 0.3s; }
+        .weather-detail-card:hover { background: rgba(255,255,255,0.15); transform: translateY(-2px); }
+        .weather-detail-icon { font-size: 1.5rem; margin-bottom: 0.3rem; }
+        .weather-detail-label { color: rgba(255,255,255,0.7); font-size: 0.7rem; text-transform: uppercase; margin-bottom: 0.2rem; }
+        .weather-detail-value { color: white; font-size: 1.1rem; font-weight: 700; }
+        .weather-sun { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 1rem; }
+        .weather-sun-card { background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 0.8rem; text-align: center; }
+        .weather-sun-card .icon { font-size: 1.5rem; }
+        .weather-sun-card .label { color: rgba(255,255,255,0.7); font-size: 0.7rem; text-transform: uppercase; margin: 0.3rem 0; }
+        .weather-sun-card .value { color: white; font-size: 1rem; font-weight: 700; }
+        .weather-forecast { background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15); border-radius: 15px; padding: 1rem; margin-bottom: 1rem; }
+        .weather-forecast h3 { color: white; font-size: 1rem; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.5rem; }
+        .forecast-day { display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); color: white; }
+        .forecast-day:last-child { border-bottom: none; }
+        .forecast-day-name { font-weight: 600; min-width: 80px; font-size: 0.9rem; }
+        .forecast-day-icon { font-size: 1.3rem; width: 35px; text-align: center; }
+        .forecast-day-rain { font-size: 0.75rem; color: #74c0fc; min-width: 45px; text-align: center; }
+        .forecast-day-temps { font-weight: 600; display: flex; gap: 0.5rem; }
+        .forecast-day-temps .max { color: #ff6b6b; }
+        .forecast-day-temps .min { color: #74c0fc; }
+        .weather-loading { text-align: center; padding: 2rem; color: white; }
+        .weather-loading .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.2); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .weather-error { text-align: center; padding: 1rem; color: #ff6b6b; background: rgba(255,107,107,0.1); border-radius: 10px; margin: 1rem 0; }
+
+        .calendar-nav { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15); border-radius: 15px; padding: 0.8rem; margin-bottom: 1rem; gap: 0.5rem; }
+        .calendar-nav-btn { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); color: white; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 1rem; transition: all 0.3s; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .calendar-nav-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.1); }
+        .calendar-nav-btn.today-btn { width: auto; padding: 0 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
+        .calendar-nav-title { flex: 1; text-align: center; color: white; font-size: 1.1rem; font-weight: 700; }
+        .calendar-nav-title .year-range { display: block; font-size: 0.8rem; color: rgba(255,255,255,0.7); font-weight: 500; margin-top: 0.2rem; }
+        .calendar-current-banner { background: linear-gradient(135deg, rgba(255, 107, 107, 0.25), rgba(238, 90, 111, 0.25)); border: 2px solid rgba(255, 107, 107, 0.6); border-radius: 15px; padding: 1rem; margin-bottom: 1.2rem; text-align: center; box-shadow: 0 0 20px rgba(255, 107, 107, 0.3); animation: glowBanner 2s ease-in-out infinite; }
+        @keyframes glowBanner { 0%, 100% { box-shadow: 0 0 20px rgba(255, 107, 107, 0.3); } 50% { box-shadow: 0 0 30px rgba(255, 107, 107, 0.5); } }
+        .calendar-current-banner .banner-label { color: rgba(255,255,255,0.8); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.3rem; }
+        .calendar-current-banner .banner-month { color: white; font-size: 1.6rem; font-weight: 800; text-shadow: 0 0 15px rgba(255, 107, 107, 0.6); }
+        .calendar-current-banner .banner-date { color: rgba(255,255,255,0.9); font-size: 0.9rem; margin-top: 0.3rem; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.9rem; margin-bottom: 1.5rem; }
+        .calendar-month { background: rgba(255,255,255,0.06); border: 2px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 0.7rem; transition: all 0.3s; position: relative; }
+        .calendar-month:hover { background: rgba(255,255,255,0.12); transform: translateY(-2px); }
+        .calendar-month.current { border-color: #ff6b6b; background: linear-gradient(135deg, rgba(255, 107, 107, 0.2), rgba(238, 90, 111, 0.15)); box-shadow: 0 0 20px rgba(255, 107, 107, 0.5); animation: pulseCurrentMonth 2s ease-in-out infinite; }
+        @keyframes pulseCurrentMonth { 0%, 100% { box-shadow: 0 0 20px rgba(255, 107, 107, 0.5); } 50% { box-shadow: 0 0 30px rgba(255, 107, 107, 0.7); } }
+        .month-name { color: white; font-weight: 700; font-size: 0.8rem; text-align: center; margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.2; }
+        .month-year { display: block; font-size: 0.65rem; color: rgba(255,255,255,0.6); font-weight: 500; margin-top: 2px; }
+        .calendar-month.current .month-name { color: #ff6b6b; font-size: 0.85rem; text-shadow: 0 0 10px rgba(255, 107, 107, 0.5); }
+        .calendar-month.current .month-year { color: rgba(255, 107, 107, 0.8); font-weight: 700; }
+        .calendar-month.year-change { border-top: 3px solid #ffd700; margin-top: 0.3rem; }
+        .calendar-month.year-change::before { content: '✨ Nuevo año'; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #ffd700, #ffb700); color: #000; font-size: 0.6rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
+        .month-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+        .day-header { color: rgba(255,255,255,0.5); font-size: 0.6rem; text-align: center; font-weight: 600; }
+        .day { color: rgba(255,255,255,0.85); font-size: 0.65rem; text-align: center; padding: 3px 0; border-radius: 4px; cursor: default; transition: all 0.2s; }
+        .day:hover { background: rgba(255,255,255,0.15); }
+        .day.today { background: linear-gradient(135deg, #ff6b6b, #ee5a6f); color: white; font-weight: 700; box-shadow: 0 0 10px rgba(255, 107, 107, 0.8); animation: pulseToday 1.5s ease-in-out infinite; }
+        @keyframes pulseToday { 0%, 100% { box-shadow: 0 0 10px rgba(255, 107, 107, 0.8); } 50% { box-shadow: 0 0 15px rgba(255, 107, 107, 1); } }
+        .day.holiday { background: linear-gradient(135deg, #ffd700, #ffb700); color: #000; font-weight: 700; box-shadow: 0 0 8px rgba(255, 215, 0, 0.6); }
+        .day.empty { visibility: hidden; }
+        .calendar-events { background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 183, 0, 0.05)); border: 2px solid rgba(255, 215, 0, 0.3); border-radius: 15px; padding: 1.2rem; }
+        .calendar-events h3 { color: #ffd700; font-size: 1.05rem; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.5rem; }
+        .event-item { color: rgba(255,255,255,0.95); padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem; display: flex; gap: 0.5rem; align-items: center; }
+        .event-item:last-child { border-bottom: none; }
+        .event-date { color: #ffd700; font-weight: 700; min-width: 70px; font-size: 0.8rem; }
+
+        .help-section { background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15); border-radius: 15px; padding: 1rem; margin-bottom: 0.9rem; }
+        .help-section h3 { color: #10b981; font-size: 1.15rem; margin-bottom: 0.7rem; display: flex; align-items: center; gap: 0.5rem; }
+        .help-command { color: rgba(255,255,255,0.95); padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 1rem; line-height: 1.5; }
+        .help-command:last-child { border-bottom: none; }
+        .help-command strong { color: #10b981; font-weight: 600; }
+        .help-tip { background: rgba(16, 185, 129, 0.1); border-left: 3px solid #10b981; padding: 0.8rem; margin-top: 0.5rem; border-radius: 5px; color: rgba(255,255,255,0.95); font-size: 0.95rem; line-height: 1.5; }
+
+        .calc-display { background: linear-gradient(135deg, #0f172a, #1e293b); border: 2px solid rgba(244, 114, 182, 0.5); border-radius: 12px; padding: 0.8rem 1rem; margin-bottom: 1rem; min-height: 60px; max-height: 70px; display: flex; flex-direction: column; justify-content: center; align-items: flex-end; box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5), 0 0 15px rgba(244, 114, 182, 0.3); overflow: hidden; }
+        .calc-history { color: rgba(255, 255, 255, 0.5); font-size: 0.85rem; min-height: 15px; word-break: break-all; width: 100%; text-align: right; }
+        .calc-result { color: #ffffff; font-size: 2rem; font-weight: 700; word-break: break-all; text-shadow: 0 0 10px rgba(244, 114, 182, 0.5); width: 100%; text-align: right; line-height: 1.2; }
+        .calc-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.6rem; }
+        .calc-btn { padding: 0.9rem; border: none; border-radius: 10px; font-size: 1.15rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; color: white; box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3); }
+        .calc-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 12px rgba(0, 0, 0, 0.4); }
+        .calc-btn:active { transform: translateY(0); }
+        .calc-btn.number { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+        .calc-btn.number:hover { background: linear-gradient(135deg, #818cf8, #a78bfa); }
+        .calc-btn.operator { background: linear-gradient(135deg, #f59e0b, #f97316); }
+        .calc-btn.operator:hover { background: linear-gradient(135deg, #fbbf24, #fb923c); }
+        .calc-btn.equal { background: linear-gradient(135deg, #10b981, #059669); }
+        .calc-btn.equal:hover { background: linear-gradient(135deg, #34d399, #10b981); }
+        .calc-btn.clear { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .calc-btn.clear:hover { background: linear-gradient(135deg, #f87171, #ef4444); }
+        .calc-btn.delete { background: linear-gradient(135deg, #ec4899, #db2777); }
+        .calc-btn.delete:hover { background: linear-gradient(135deg, #f472b6, #ec4899); }
+        .calc-btn.zero { grid-column: span 2; }
+        .calc-btn.special { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+        .calc-btn.special:hover { background: linear-gradient(135deg, #22d3ee, #06b6d4); }
+
+        .weather-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 998; backdrop-filter: blur(3px); }
+        .weather-overlay.active { display: block; }
+
+        .drag-hint { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 0.8rem 1.5rem; border-radius: 25px; font-size: 0.9rem; z-index: 997; opacity: 0; transition: opacity 0.3s; pointer-events: none; text-align: center; }
+        .drag-hint.visible { opacity: 1; }
+
+        /* ===== RESPONSIVE MEJORADO ===== */
+        
+        /* Tablets y pantallas medianas */
+        @media (max-width: 1024px) {
+            .hero { 
+                flex-direction: column; 
+                gap: 1.5rem; 
+                padding: 1rem; 
+            }
+            .buttons-left, .buttons-right { 
+                flex-direction: row; 
+                flex-wrap: wrap; 
+                justify-content: center; 
+                gap: 0.5rem;
+                max-width: 100%;
+            }
+            .btn { 
+                min-width: 110px; 
+                max-width: 140px; 
+            }
+            .robot-center img { 
+                max-width: 240px; 
+            }
+            .robot-fab {
+                width: 38px;
+                height: 38px;
+                font-size: 1.1rem;
+            }
+            .robot-controls, .robot-controls-bottom {
+                gap: 12px;
+            }
+        }
+        
+        /* Móviles */
+        @media (max-width: 600px) {
+            .hero { 
+                flex-direction: column; 
+                gap: 1rem; 
+                padding: 0.8rem; 
+            }
+            
+            .buttons-left, .buttons-right { 
+                flex-direction: row; 
+                flex-wrap: wrap; 
+                justify-content: center; 
+                gap: 0.4rem;
+                max-width: 100%;
+                padding: 0.2rem;
+            }
+            
+            .btn { 
+                min-width: 90px; 
+                max-width: 110px; 
+                padding: 0.35rem 0.5rem; 
+                font-size: 0.7rem; 
+                height: 36px;
+            }
+            .btn .icon { 
+                width: 22px; 
+                height: 22px; 
+                font-size: 0.9rem; 
+            }
+            
+            .robot-frame {
+                padding: 0.05rem;
+            }
+            
+            .robot-center img { 
+                max-width: 200px; 
+            }
+            
+            .robot-controls {
+                top: 8px;
+                gap: 8px;
+            }
+            
+            .robot-controls-bottom {
+                bottom: 8px;
+                gap: 8px;
+            }
+            
+            .robot-fab { 
+                width: 34px; 
+                height: 34px; 
+                font-size: 1rem;
+                border-width: 2px;
+            }
+            
+            .weather-panel, .calendar-panel { 
+                width: 100%;
+                max-width: 100vw;
+            }
+            .weather-panel { right: -100%; }
+            .calendar-panel { left: -100%; }
+            
+            .help-panel, .calc-panel, .memory-panel, .background-panel { 
+                width: 95vw; 
+                padding: 1rem;
+                max-height: 90vh;
+            }
+            
+            .calc-result { font-size: 1.6rem; }
+            .calc-btn { padding: 0.7rem; font-size: 0.95rem; }
+            
+            .calendar-grid { grid-template-columns: 1fr; }
+            
+            .help-command { font-size: 0.9rem; }
+            .help-section h3 { font-size: 1rem; }
+            
+            .memory-actions { grid-template-columns: 1fr 1fr; }
+            .color-grid { grid-template-columns: repeat(3, 1fr); }
+            
+            .drag-hint {
+                bottom: 80px;
+                font-size: 0.8rem;
+                padding: 0.6rem 1rem;
+            }
+        }
+        
+        /* Móviles muy pequeños */
+        @media (max-width: 380px) {
+            .btn { 
+                min-width: 80px; 
+                max-width: 100px; 
+                font-size: 0.65rem; 
+                height: 34px;
+                padding: 0.3rem 0.4rem;
+            }
+            .btn .icon { 
+                width: 20px; 
+                height: 20px; 
+                font-size: 0.85rem; 
+            }
+            .robot-center img { 
+                max-width: 180px; 
+            }
+            .robot-fab {
+                width: 30px;
+                height: 30px;
+                font-size: 0.9rem;
+            }
+        }
+
+        body.light-theme .btn { color: #1a1a2e; border-color: rgba(0,0,0,0.3); background: rgba(0,0,0,0.05); }
+        body.light-theme .robot-frame { border-color: #1a3fd4; box-shadow: 0 0 5px #1a3fd4, 0 0 15px #1a3fd4, 0 0 30px rgba(26,63,212,0.8); }
+    </style>
+</head>
+<body>
+
+    <div class="weather-overlay" id="overlay" onclick="closeAllPanels()"></div>
+    <div class="drag-hint" id="dragHint">💡 Arrastra los botones rectangulares para reorganizarlos</div>
+
+    <div class="calendar-panel" id="calendarPanel">
+        <div class="panel-header">
+            <h2>📅 Calendario</h2>
+            <button class="panel-close" onclick="toggleCalendar()">✕</button>
+        </div>
+        <div class="calendar-nav">
+            <button class="calendar-nav-btn" onclick="navYear(-1)" title="Año anterior">◀</button>
+            <button class="calendar-nav-btn today-btn" onclick="goToToday()" title="Volver al mes actual">📍 Hoy</button>
+            <div class="calendar-nav-title">
+                <span id="navTitle">Viendo meses</span>
+                <span class="year-range" id="navYearRange">-</span>
+            </div>
+            <button class="calendar-nav-btn" onclick="navYear(1)" title="Año siguiente">▶</button>
+        </div>
+        <div class="calendar-current-banner">
+            <div class="banner-label">📌 Mes actual</div>
+            <div class="banner-month" id="bannerMonth">-</div>
+            <div class="banner-date" id="bannerDate">-</div>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+        <div class="calendar-events">
+            <h3>🎉 Próximas Celebraciones en Chile</h3>
+            <div id="eventsList"></div>
+        </div>
+    </div>
+
+    <div class="weather-panel" id="weatherPanel">
+        <div class="panel-header">
+            <h2>⛅ Clima en Vivo</h2>
+            <button class="panel-close" onclick="toggleWeather()">✕</button>
+        </div>
+        <div id="weatherContent">
+            <div class="weather-loading">
+                <div class="spinner"></div>
+                <div>Cargando datos del clima...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="help-panel" id="helpPanel">
+        <div class="panel-header">
+            <h2>💡 Guía de Zero</h2>
+            <button class="panel-close" onclick="toggleHelp()">✕</button>
+        </div>
+        <div class="help-section">
+            <h3>🎤 Comandos de Voz Básicos</h3>
+            <div class="help-command"><strong>"Hola"</strong> o <strong>"Buenos días"</strong> - Saludar a Zero</div>
+            <div class="help-command"><strong>"¿Qué hora es?"</strong> - Consultar la hora actual</div>
+            <div class="help-command"><strong>"Abre el clima"</strong> - Ver el panel del clima</div>
+            <div class="help-command"><strong>"Abre el calendario"</strong> - Ver el calendario</div>
+            <div class="help-command"><strong>"Pon la radio"</strong> - Abrir radios de Chile</div>
+            <div class="help-command"><strong>"Abre la calculadora"</strong> - Usar la calculadora</div>
+            <div class="help-command"><strong>"Abre WhatsApp/Telegram/Gmail/YouTube"</strong> - Abrir apps</div>
+            <div class="help-command"><strong>"Cambia el fondo"</strong> - Personalizar fondo</div>
+            <div class="help-command"><strong>"Adiós"</strong> o <strong>"Chao"</strong> - Despedirse</div>
+        </div>
+        <div class="help-section">
+            <h3>🧠 Memoria de Zero</h3>
+            <div class="help-command"><strong>"Zero recuerda que..."</strong> - Guardar un recuerdo</div>
+            <div class="help-command"><strong>"¿Qué te dije sobre...?"</strong> - Buscar un recuerdo</div>
+            <div class="help-command"><strong>"Muéstrame todos tus recuerdos"</strong> - Ver memoria</div>
+            <div class="help-command"><strong>"Zero olvida..."</strong> - Borrar recuerdo</div>
+            <div class="help-tip">💡 Los recuerdos se guardan en tu navegador. Usa el respaldo para no perderlos.</div>
+        </div>
+        <div class="help-section">
+            <h3>💾 Respaldo de Memoria</h3>
+            <div class="help-command"><strong>"Exporta tu memoria"</strong> - Guardar en archivo</div>
+            <div class="help-command"><strong>"Importa tu memoria"</strong> - Cargar desde archivo</div>
+        </div>
+        <div class="help-section">
+            <h3>🎨 Personalización</h3>
+            <div class="help-command"><strong>Botón 🌙 Tema</strong> - Cambiar modo oscuro/claro</div>
+            <div class="help-command"><strong>Botón 🎤 Micrófono</strong> - Activar voz</div>
+            <div class="help-command"><strong>Botón 🔊 Altavoz</strong> - Probar voz de Zero</div>
+            <div class="help-command"><strong>Botón 🧠 Recuerda</strong> - Gestionar memoria</div>
+            <div class="help-command"><strong>Botón 🖼️ Fondos</strong> - Cambiar fondo</div>
+        </div>
+        <div class="help-section">
+            <h3>⌨️ Atajos de Teclado</h3>
+            <div class="help-command"><strong>ESC</strong> - Cerrar cualquier panel</div>
+            <div class="help-tip">💡 También puedes hacer clic fuera de los paneles para cerrarlos.</div>
+        </div>
+        <div class="help-section">
+            <h3>📱 Controles del Robot</h3>
+            <div class="help-command"><strong>📅 Calendario</strong> (arriba del robot) - Ver fechas</div>
+            <div class="help-command"><strong>⛅ Clima</strong> (arriba del robot) - Ver el clima</div>
+            <div class="help-command"><strong>❓ Ayuda</strong> (arriba del robot) - Esta guía</div>
+            <div class="help-command"><strong>🧮 Calculadora</strong> (arriba del robot) - Calcular</div>
+            <div class="help-command"><strong>▶ YouTube</strong> (abajo del robot) - Ver videos</div>
+            <div class="help-command"><strong>💬 WhatsApp</strong> (abajo del robot) - Mensajes</div>
+            <div class="help-command"><strong>✉️ Gmail</strong> (abajo del robot) - Correo</div>
+            <div class="help-command"><strong>✈️ Telegram</strong> (abajo del robot) - Mensajes</div>
+            <div class="help-tip">💡 Los botones circulares están fijos, solo los rectangulares se pueden mover.</div>
+        </div>
+        <div class="help-section">
+            <h3>🎯 Botones Arrastrables</h3>
+            <div class="help-command"><strong>Arrastra los botones rectangulares</strong> para reorganizarlos</div>
+            <div class="help-command"><strong>Mueve entre izquierda y derecha</strong> libremente</div>
+            <div class="help-tip">💡 ¡Organiza los botones exteriores como prefieras!</div>
+        </div>
+    </div>
+
+    <div class="memory-panel" id="memoryPanel">
+        <div class="panel-header">
+            <h2>🧠 Memoria de Zero</h2>
+            <button class="panel-close" onclick="toggleMemory()">✕</button>
+        </div>
+        <div class="memory-stats">
+            <div class="stats-number" id="memoryCount">0</div>
+            <div class="stats-label">recuerdos guardados</div>
+        </div>
+        <div class="memory-actions">
+            <button class="memory-action-btn view" onclick="showMemoryList()">
+                <span class="action-icon">👁️</span><span>Ver recuerdos</span>
+            </button>
+            <button class="memory-action-btn export" onclick="exportarMemoria()">
+                <span class="action-icon">💾</span><span>Exportar respaldo</span>
+            </button>
+            <button class="memory-action-btn import" onclick="importarMemoria()">
+                <span class="action-icon">📂</span><span>Importar respaldo</span>
+            </button>
+            <button class="memory-action-btn delete" onclick="confirmarBorrarTodo()">
+                <span class="action-icon">🗑️</span><span>Borrar todo</span>
+            </button>
+        </div>
+        <div class="memory-list" id="memoryList">
+            <div class="memory-empty">
+                <div class="empty-icon">🧠</div>
+                <div>Haz clic en "Ver recuerdos" para ver lo que Zero recuerda</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="background-panel" id="backgroundPanel">
+        <div class="panel-header">
+            <h2>🖼️ Fondos de Zero</h2>
+            <button class="panel-close" onclick="toggleBackground()">✕</button>
+        </div>
+        <div class="bg-section">
+            <h3>🎨 Colores Predefinidos</h3>
+            <div class="color-grid">
+                <div class="color-option" style="background: #1a3fd4;" onclick="setColorBg('#1a3fd4')" title="Azul Zero"></div>
+                <div class="color-option" style="background: #0f172a;" onclick="setColorBg('#0f172a')" title="Azul Oscuro"></div>
+                <div class="color-option" style="background: #1e293b;" onclick="setColorBg('#1e293b')" title="Gris Azulado"></div>
+                <div class="color-option" style="background: #312e81;" onclick="setColorBg('#312e81')" title="Índigo"></div>
+                <div class="color-option" style="background: #4c1d95;" onclick="setColorBg('#4c1d95')" title="Púrpura"></div>
+                <div class="color-option" style="background: #7f1d1d;" onclick="setColorBg('#7f1d1d')" title="Rojo Oscuro"></div>
+                <div class="color-option" style="background: #064e3b;" onclick="setColorBg('#064e3b')" title="Verde Oscuro"></div>
+                <div class="color-option" style="background: #000000;" onclick="setColorBg('#000000')" title="Negro"></div>
+            </div>
+        </div>
+        <div class="bg-section">
+            <h3>📁 Tu Imagen Personalizada</h3>
+            <button class="bg-upload-btn" onclick="document.getElementById('bgFileInput').click()">
+                <span class="upload-icon">📤</span>
+                <span>Seleccionar imagen desde tu carpeta</span>
+            </button>
+            <input type="file" id="bgFileInput" accept="image/*" style="display: none;" onchange="handleBgUpload(event)">
+            <div class="bg-preview" id="bgPreview"></div>
+        </div>
+        <button class="bg-reset-btn" onclick="resetBackground()">
+            🔄 Restaurar fondo original (Azul Zero)
+        </button>
+    </div>
+
+    <div class="calc-panel" id="calcPanel">
+        <div class="panel-header">
+            <h2>🧮 Calculadora</h2>
+            <button class="panel-close" onclick="toggleCalc()">✕</button>
+        </div>
+        <div class="calc-display">
+            <div class="calc-history" id="calcHistory"></div>
+            <div class="calc-result" id="calcResult">0</div>
+        </div>
+        <div class="calc-buttons">
+            <button class="calc-btn clear" onclick="calcClear()">C</button>
+            <button class="calc-btn delete" onclick="calcDelete()">⌫</button>
+            <button class="calc-btn special" onclick="calcAppend('%')">%</button>
+            <button class="calc-btn operator" onclick="calcAppend('/')">÷</button>
+            <button class="calc-btn number" onclick="calcAppend('7')">7</button>
+            <button class="calc-btn number" onclick="calcAppend('8')">8</button>
+            <button class="calc-btn number" onclick="calcAppend('9')">9</button>
+            <button class="calc-btn operator" onclick="calcAppend('*')">×</button>
+            <button class="calc-btn number" onclick="calcAppend('4')">4</button>
+            <button class="calc-btn number" onclick="calcAppend('5')">5</button>
+            <button class="calc-btn number" onclick="calcAppend('6')">6</button>
+            <button class="calc-btn operator" onclick="calcAppend('-')">−</button>
+            <button class="calc-btn number" onclick="calcAppend('1')">1</button>
+            <button class="calc-btn number" onclick="calcAppend('2')">2</button>
+            <button class="calc-btn number" onclick="calcAppend('3')">3</button>
+            <button class="calc-btn operator" onclick="calcAppend('+')">+</button>
+            <button class="calc-btn number zero" onclick="calcAppend('0')">0</button>
+            <button class="calc-btn number" onclick="calcAppend('.')">.</button>
+            <button class="calc-btn equal" onclick="calcEqual()">=</button>
+        </div>
+    </div>
+
+    <section class="hero">
+        <div class="buttons-left" id="buttonsLeft">
+            <a href="https://www.tiktok.com" target="_blank" class="btn btn-tiktok" draggable="true"><span class="icon">♪</span><span>TikTok</span></a>
+            <a href="https://www.google.com" target="_blank" class="btn btn-google" draggable="true"><span class="icon">G</span><span>Google</span></a>
+            <a href="https://www.instagram.com" target="_blank" class="btn btn-instagram" draggable="true"><span class="icon">📷</span><span>Instagram</span></a>
+            <a href="https://www.spotify.com" target="_blank" class="btn btn-spotify" draggable="true"><span class="icon">🎵</span><span>Spotify</span></a>
+            <a href="https://www.facebook.com" target="_blank" class="btn btn-facebook" draggable="true"><span class="icon">f</span><span>Facebook</span></a>
+            <a href="https://www.netflix.com" target="_blank" class="btn btn-netflix" draggable="true"><span class="icon">N</span><span>Netflix</span></a>
+        </div>
+
+        <div class="robot-frame">
+            <div class="robot-center">
+                <div class="robot-controls">
+                    <button class="robot-fab calendar-fab" onclick="toggleCalendar()" title="Calendario">📅</button>
+                    <button class="robot-fab weather-fab" onclick="toggleWeather()" title="Clima">⛅</button>
+                    <button class="robot-fab help-fab" onclick="toggleHelp()" title="Ayuda">❓</button>
+                    <button class="robot-fab calc-fab" onclick="toggleCalc()" title="Calculadora">🧮</button>
+                </div>
+                <img src="zero-robot.png" alt="Zero - Asistente Virtual">
+                <div class="robot-controls-bottom">
+                    <a href="https://www.youtube.com" target="_blank" class="robot-fab youtube-fab" title="YouTube">▶</a>
+                    <a href="https://web.whatsapp.com" target="_blank" class="robot-fab whatsapp-fab" title="WhatsApp">💬</a>
+                    <a href="https://mail.google.com" target="_blank" class="robot-fab gmail-fab" title="Gmail">✉️</a>
+                    <a href="https://web.telegram.org" target="_blank" class="robot-fab telegram-fab" title="Telegram">✈️</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="buttons-right" id="buttonsRight">
+            <a href="https://translate.google.com" target="_blank" class="btn btn-traductor" draggable="true"><span class="icon">🌐</span><span>Traductor</span></a>
+            <button class="btn btn-recuerda" draggable="true" onclick="toggleMemory()"><span class="icon">🧠</span><span>Recuerda</span></button>
+            <button class="btn btn-microfono" draggable="true" onclick="activarMicrofono()"><span class="icon">🎤</span><span>Micrófono</span></button>
+            <button class="btn btn-altavoz" draggable="true" onclick="activarAltavoz()"><span class="icon">🔊</span><span>Altavoz</span></button>
+            <button class="btn btn-tema" draggable="true" onclick="cambiarTema()"><span class="icon">🌙</span><span>Tema</span></button>
+            <button class="btn btn-wikipedia" draggable="true" onclick="window.open('https://www.wikipedia.org', '_blank')"><span class="icon">W</span><span>Wikipedia</span></button>
+            <a href="https://www.radiosdechile.cl" target="_blank" class="btn btn-radios" draggable="true"><span class="icon">📻</span><span>Radios</span></a>
+            <button class="btn btn-hora" draggable="true"><span class="icon">🕐</span><span id="horaActual">--:--:--</span></button>
+            <button class="btn btn-background" draggable="true" onclick="toggleBackground()"><span class="icon">🖼️</span><span>Fondos</span></button>
+        </div>
+    </section>
+
+    <script>
+        // ===== SISTEMA DE FONDOS =====
+        function toggleBackground() {
+            const panel = document.getElementById('backgroundPanel');
+            const isActive = panel.classList.contains('active');
+            panel.classList.toggle('active');
+            document.getElementById('weatherPanel').classList.remove('active');
+            document.getElementById('calendarPanel').classList.remove('active');
+            document.getElementById('helpPanel').classList.remove('active');
+            document.getElementById('calcPanel').classList.remove('active');
+            document.getElementById('memoryPanel').classList.remove('active');
+            document.getElementById('overlay').classList.toggle('active');
+            if (!isActive) loadSavedBackground();
+        }
+
+        function setColorBg(color) {
+            document.body.style.background = color;
+            document.body.classList.remove('has-image-bg');
+            localStorage.setItem('zeroBackground', JSON.stringify({ type: 'color', value: color }));
+            document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('bgPreview').style.background = color;
+            zeroHabla('Fondo cambiado');
+        }
+
+        function handleBgUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const imageUrl = e.target.result;
+                document.body.style.background = `url(${imageUrl})`;
+                document.body.classList.add('has-image-bg');
+                localStorage.setItem('zeroBackground', JSON.stringify({ type: 'image', value: imageUrl }));
+                document.getElementById('bgPreview').style.background = `url(${imageUrl})`;
+                document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('active'));
+                zeroHabla('¡Fondo personalizado cargado!');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function resetBackground() {
+            document.body.style.background = '#1a3fd4';
+            document.body.classList.remove('has-image-bg');
+            localStorage.removeItem('zeroBackground');
+            document.getElementById('bgPreview').style.background = '';
+            document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('active'));
+            zeroHabla('Fondo restaurado al azul original.');
+        }
+
+        function loadSavedBackground() {
+            const saved = localStorage.getItem('zeroBackground');
+            if (!saved) return;
+            try {
+                const bg = JSON.parse(saved);
+                if (bg.type === 'color') {
+                    document.body.style.background = bg.value;
+                    document.body.classList.remove('has-image-bg');
+                } else if (bg.type === 'image') {
+                    document.body.style.background = `url(${bg.value})`;
+                    document.body.classList.add('has-image-bg');
+                }
+            } catch (e) { console.error('Error al cargar fondo:', e); }
+        }
+
+        // ===== DRAG AND DROP MEJORADO (BIDIRECCIONAL) =====
+        let draggedBtn = null;
+
+        window.addEventListener('load', () => {
+            const hint = document.getElementById('dragHint');
+            hint.classList.add('visible');
+            setTimeout(() => hint.classList.remove('visible'), 4000);
+            loadSavedBackground();
+            loadButtonOrder();
+            initDragAndDrop();
+        });
+
+        function initDragAndDrop() {
+            const buttons = document.querySelectorAll('.btn[draggable="true"]');
+            buttons.forEach(btn => {
+                btn.addEventListener('dragstart', handleDragStart);
+                btn.addEventListener('dragend', handleDragEnd);
+                btn.addEventListener('dragover', handleDragOver);
+                btn.addEventListener('dragenter', handleDragEnter);
+                btn.addEventListener('dragleave', handleDragLeave);
+                btn.addEventListener('drop', handleDrop);
+            });
+
+            const columns = document.querySelectorAll('.buttons-left, .buttons-right');
+            columns.forEach(col => {
+                col.addEventListener('dragover', handleColumnDragOver);
+                col.addEventListener('dragenter', handleColumnDragEnter);
+                col.addEventListener('dragleave', handleColumnDragLeave);
+                col.addEventListener('drop', handleColumnDrop);
+            });
+        }
+
+        function handleDragStart(e) {
+            draggedBtn = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            document.getElementById('dragHint').classList.remove('visible');
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            draggedBtn = null;
+            document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('drag-over'));
+            document.querySelectorAll('.buttons-left, .buttons-right').forEach(col => col.classList.remove('drop-zone'));
+            saveButtonOrder();
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDragEnter(e) {
+            if (this !== draggedBtn) this.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) { this.classList.remove('drag-over'); }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) e.stopPropagation();
+            if (draggedBtn !== this) {
+                const parent = this.parentNode;
+                const draggedNext = draggedBtn.nextSibling;
+                const targetNext = this.nextSibling;
+                if (draggedNext === this) {
+                    parent.insertBefore(this, draggedBtn);
+                } else {
+                    parent.insertBefore(draggedBtn, this);
+                    if (targetNext) parent.insertBefore(this, targetNext);
+                    else parent.appendChild(this);
+                }
+                this.classList.remove('drag-over');
+            }
+            return false;
+        }
+
+        function handleColumnDragOver(e) {
+            if (e.preventDefault) e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleColumnDragEnter(e) {
+            e.preventDefault();
+            this.classList.add('drop-zone');
+        }
+
+        function handleColumnDragLeave(e) {
+            const relatedTarget = e.relatedTarget;
+            if (!this.contains(relatedTarget)) {
+                this.classList.remove('drop-zone');
+            }
+        }
+
+        function handleColumnDrop(e) {
+            if (e.stopPropagation) e.stopPropagation();
+            e.preventDefault();
+            if (draggedBtn) {
+                this.appendChild(draggedBtn);
+                this.classList.remove('drop-zone');
+                saveButtonOrder();
+            }
+        }
+
+        function saveButtonOrder() {
+            const leftButtons = Array.from(document.querySelectorAll('#buttonsLeft .btn')).map(btn => btn.outerHTML);
+            const rightButtons = Array.from(document.querySelectorAll('#buttonsRight .btn')).map(btn => btn.outerHTML);
+            localStorage.setItem('zeroButtonOrderV4', JSON.stringify({ left: leftButtons, right: rightButtons }));
+        }
+
+        function loadButtonOrder() {
+            const saved = localStorage.getItem('zeroButtonOrderV4');
+            if (!saved) return;
+            try {
+                const order = JSON.parse(saved);
+                const leftContainer = document.getElementById('buttonsLeft');
+                const rightContainer = document.getElementById('buttonsRight');
+                leftContainer.innerHTML = '';
+                rightContainer.innerHTML = '';
+                if (order.left && order.left.length > 0) {
+                    order.left.forEach(html => {
+                        const temp = document.createElement('div');
+                        temp.innerHTML = html;
+                        const btn = temp.firstElementChild;
+                        if (btn) leftContainer.appendChild(btn);
+                    });
+                }
+                if (order.right && order.right.length > 0) {
+                    order.right.forEach(html => {
+                        const temp = document.createElement('div');
+                        temp.innerHTML = html;
+                        const btn = temp.firstElementChild;
+                        if (btn) rightContainer.appendChild(btn);
+                    });
+                }
+                initDragAndDrop();
+            } catch (e) { console.error('Error al cargar orden:', e); }
+        }
+
+        // ===== CLIMA =====
+        const CIUDAD_DEFAULT = { nombre: 'Santiago', lat: -33.4489, lon: -70.6693, pais: 'Chile' };
+        let ciudadActual = CIUDAD_DEFAULT;
+        let weatherData = null;
+
+        function getWeatherInfo(code) {
+            const weatherCodes = {
+                0: { emoji: '☀️', desc: 'Despejado' }, 1: { emoji: '🌤️', desc: 'Mayormente despejado' },
+                2: { emoji: '⛅', desc: 'Parcialmente nublado' }, 3: { emoji: '☁️', desc: 'Nublado' },
+                45: { emoji: '🌫️', desc: 'Niebla' }, 48: { emoji: '🌫️', desc: 'Niebla con escarcha' },
+                51: { emoji: '🌦️', desc: 'Llovizna ligera' }, 53: { emoji: '🌦️', desc: 'Llovizna moderada' },
+                55: { emoji: '🌦️', desc: 'Llovizna densa' }, 56: { emoji: '🌧️', desc: 'Llovizna helada' },
+                57: { emoji: '🌧️', desc: 'Llovizna helada densa' }, 61: { emoji: '🌧️', desc: 'Lluvia ligera' },
+                63: { emoji: '🌧️', desc: 'Lluvia moderada' }, 65: { emoji: '🌧️', desc: 'Lluvia intensa' },
+                66: { emoji: '🌧️', desc: 'Lluvia helada' }, 67: { emoji: '🌧️', desc: 'Lluvia helada intensa' },
+                71: { emoji: '🌨️', desc: 'Nevada ligera' }, 73: { emoji: '🌨️', desc: 'Nevada moderada' },
+                75: { emoji: '❄️', desc: 'Nevada intensa' }, 77: { emoji: '❄️', desc: 'Granizo' },
+                80: { emoji: '🌦️', desc: 'Chubascos ligeros' }, 81: { emoji: '🌧️', desc: 'Chubascos moderados' },
+                82: { emoji: '⛈️', desc: 'Chubascos violentos' }, 85: { emoji: '🌨️', desc: 'Chubascos de nieve' },
+                86: { emoji: '❄️', desc: 'Chubascos de nieve intensos' }, 95: { emoji: '⛈️', desc: 'Tormenta' },
+                96: { emoji: '⛈️', desc: 'Tormenta con granizo' }, 99: { emoji: '⛈️', desc: 'Tormenta con granizo intenso' }
+            };
+            return weatherCodes[code] || { emoji: '❓', desc: 'Desconocido' };
+        }
+
+        function getDayName(dateStr, isToday = false) {
+            if (isToday) return 'Hoy';
+            const date = new Date(dateStr);
+            const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+            return dias[date.getDay()];
+        }
+
+        async function cargarClima() {
+            const content = document.getElementById('weatherContent');
+            content.innerHTML = `<div class="weather-loading"><div class="spinner"></div><div>Cargando datos del clima...</div></div>`;
+            try {
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${ciudadActual.lat}&longitude=${ciudadActual.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,surface_pressure&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset&timezone=America/Santiago&forecast_days=7`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Error en la API');
+                weatherData = await response.json();
+                renderClima();
+            } catch (error) {
+                content.innerHTML = `<div class="weather-error"><div style="font-size: 2rem; margin-bottom: 0.5rem;">⚠️</div><div>No se pudo cargar el clima.</div><button class="refresh-btn" onclick="cargarClima()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: rgba(255,255,255,0.2); border: 1px solid white; color: white; border-radius: 10px; cursor: pointer;">Reintentar</button></div>`;
+            }
+        }
+
+        function renderClima() {
+            if (!weatherData) return;
+            const current = weatherData.current;
+            const daily = weatherData.daily;
+            const weatherInfo = getWeatherInfo(current.weather_code);
+            const ahora = new Date();
+            const horaActualizacion = `${String(ahora.getHours()).padStart(2,'0')}:${String(ahora.getMinutes()).padStart(2,'0')}`;
+            const sunrise = daily.sunrise[0] ? new Date(daily.sunrise[0]).toLocaleTimeString('es-CL', {hour: '2-digit', minute: '2-digit'}) : '--:--';
+            const sunset = daily.sunset[0] ? new Date(daily.sunset[0]).toLocaleTimeString('es-CL', {hour: '2-digit', minute: '2-digit'}) : '--:--';
+
+            let forecastHTML = '';
+            for (let i = 0; i < 7; i++) {
+                const dayInfo = getWeatherInfo(daily.weather_code[i]);
+                const dayName = getDayName(daily.time[i], i === 0);
+                const rainProb = daily.precipitation_probability_max[i] || 0;
+                forecastHTML += `<div class="forecast-day"><div class="forecast-day-name">${dayName}</div><div class="forecast-day-icon">${dayInfo.emoji}</div><div class="forecast-day-rain">💧${rainProb}%</div><div class="forecast-day-temps"><span class="max">${Math.round(daily.temperature_2m_max[i])}°</span><span class="min">${Math.round(daily.temperature_2m_min[i])}°</span></div></div>`;
+            }
+
+            document.getElementById('weatherContent').innerHTML = `
+                <div class="weather-location">📍 ${ciudadActual.nombre}, ${ciudadActual.pais}</div>
+                <div class="weather-update"><span>🕐 Actualizado: ${horaActualizacion}</span><button class="refresh-btn" onclick="cargarClima()">🔄 Actualizar</button></div>
+                <div class="weather-main">
+                    <div class="weather-icon-big">${weatherInfo.emoji}</div>
+                    <div class="weather-temp">${Math.round(current.temperature_2m)}<span>°C</span></div>
+                    <div class="weather-condition">${weatherInfo.desc}</div>
+                    <div class="weather-feels">Sensación térmica: ${Math.round(current.apparent_temperature)}°C</div>
+                </div>
+                <div class="weather-details">
+                    <div class="weather-detail-card"><div class="weather-detail-icon">💧</div><div class="weather-detail-label">Humedad</div><div class="weather-detail-value">${current.relative_humidity_2m}%</div></div>
+                    <div class="weather-detail-card"><div class="weather-detail-icon">💨</div><div class="weather-detail-label">Viento</div><div class="weather-detail-value">${Math.round(current.wind_speed_10m)} km/h</div></div>
+                    <div class="weather-detail-card"><div class="weather-detail-icon">🌡️</div><div class="weather-detail-label">Presión</div><div class="weather-detail-value">${Math.round(current.surface_pressure)} hPa</div></div>
+                    <div class="weather-detail-card"><div class="weather-detail-icon">🌡️</div><div class="weather-detail-label">Sensación</div><div class="weather-detail-value">${Math.round(current.apparent_temperature)}°C</div></div>
+                </div>
+                <div class="weather-sun">
+                    <div class="weather-sun-card"><div class="icon">🌅</div><div class="label">Amanecer</div><div class="value">${sunrise}</div></div>
+                    <div class="weather-sun-card"><div class="icon">🌇</div><div class="label">Atardecer</div><div class="value">${sunset}</div></div>
+                </div>
+                <div class="weather-forecast"><h3>📅 Pronóstico 7 días</h3>${forecastHTML}</div>
+            `;
+        }
+
+        // ===== CALENDARIO =====
+        const feriados2026 = {
+            '0-1': 'Año Nuevo', '3-3': 'Viernes Santo', '3-4': 'Sábado Santo',
+            '4-1': 'Día del Trabajo', '4-21': 'Día de las Glorias Navales',
+            '5-29': 'San Pedro y San Pablo', '6-16': 'Virgen del Carmen',
+            '7-15': 'Asunción de la Virgen', '8-18': 'Independencia Nacional',
+            '8-19': 'Glorias del Ejército', '9-12': 'Encuentro de Dos Mundos',
+            '10-1': 'Día de Todos los Santos', '11-8': 'Inmaculada Concepción', '11-25': 'Navidad'
+        };
+        const mesesNombre = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        const diasSemana = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+        const diasNombre = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        let calendarState = { yearOffset: 0 };
+
+        function navYear(direction) { calendarState.yearOffset += direction; generarCalendario(); }
+        function goToToday() { calendarState.yearOffset = 0; generarCalendario(); }
+
+        function generarCalendario() {
+            const today = new Date();
+            const currentMonth = today.getMonth();
+            const currentDay = today.getDate();
+            const currentYear = today.getFullYear();
+            const currentDayOfWeek = today.getDay();
+            const baseYear = currentYear + calendarState.yearOffset;
+            let startMonth, startYear;
+            if (calendarState.yearOffset === 0) { startMonth = currentMonth; startYear = currentYear; }
+            else { startMonth = 0; startYear = baseYear; }
+
+            document.getElementById('bannerMonth').textContent = `${mesesNombre[currentMonth]} ${currentYear}`;
+            document.getElementById('bannerDate').textContent = `${diasNombre[currentDayOfWeek]} ${currentDay} de ${mesesNombre[currentMonth]}`;
+            const endMonth = (startMonth + 11) % 12;
+            const endYear = startYear + Math.floor((startMonth + 11) / 12);
+            document.getElementById('navTitle').textContent = calendarState.yearOffset === 0 ? '📍 Mes actual y siguientes' : '📅 Explorando calendario';
+            document.getElementById('navYearRange').textContent = `${startYear} → ${endYear}`;
+
+            const grid = document.getElementById('calendarGrid');
+            const eventsList = document.getElementById('eventsList');
+            grid.innerHTML = ''; eventsList.innerHTML = '';
+            let upcomingEvents = []; let prevYear = null;
+
+            for (let i = 0; i < 12; i++) {
+                const totalMonths = startMonth + i;
+                const monthIndex = totalMonths % 12;
+                const year = startYear + Math.floor(totalMonths / 12);
+                const monthDiv = document.createElement('div');
+                monthDiv.className = 'calendar-month';
+                if (prevYear !== null && year !== prevYear) monthDiv.classList.add('year-change');
+                prevYear = year;
+                if (monthIndex === currentMonth && year === currentYear) monthDiv.classList.add('current');
+                const monthName = document.createElement('div');
+                monthName.className = 'month-name';
+                monthName.innerHTML = `${mesesNombre[monthIndex]}<span class="month-year">${year}</span>`;
+                monthDiv.appendChild(monthName);
+                const daysDiv = document.createElement('div');
+                daysDiv.className = 'month-days';
+                diasSemana.forEach(day => { const dh = document.createElement('div'); dh.className = 'day-header'; dh.textContent = day; daysDiv.appendChild(dh); });
+                const firstDay = new Date(year, monthIndex, 1).getDay();
+                const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+                for (let d = 0; d < firstDay; d++) { const emptyDay = document.createElement('div'); emptyDay.className = 'day empty'; daysDiv.appendChild(emptyDay); }
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayDiv = document.createElement('div');
+                    dayDiv.className = 'day'; dayDiv.textContent = day;
+                    if (year === 2026) {
+                        const key = `${monthIndex}-${day}`;
+                        if (feriados2026[key]) {
+                            dayDiv.classList.add('holiday'); dayDiv.title = feriados2026[key];
+                            if (year > currentYear || (year === currentYear && (monthIndex > currentMonth || (monthIndex === currentMonth && day >= currentDay)))) {
+                                upcomingEvents.push({ date: `${day} ${mesesNombre[monthIndex]} ${year}`, name: feriados2026[key], sortKey: year * 1000 + monthIndex * 100 + day });
+                            }
+                        }
+                    }
+                    if (day === currentDay && monthIndex === currentMonth && year === currentYear) { dayDiv.classList.add('today'); dayDiv.title = '¡Hoy!'; }
+                    daysDiv.appendChild(dayDiv);
+                }
+                monthDiv.appendChild(daysDiv); grid.appendChild(monthDiv);
+            }
+            upcomingEvents.sort((a, b) => a.sortKey - b.sortKey);
+            if (upcomingEvents.length === 0) eventsList.innerHTML = '<div class="event-item" style="color: rgba(255,255,255,0.6);">✨ No hay próximas celebraciones registradas</div>';
+            else upcomingEvents.slice(0, 4).forEach(ev => { const item = document.createElement('div'); item.className = 'event-item'; item.innerHTML = `<span class="event-date">📅 ${ev.date}</span><span>${ev.name}</span>`; eventsList.appendChild(item); });
+        }
+        generarCalendario();
+
+        // ===== MEMORIA =====
+        let recuerdos = JSON.parse(localStorage.getItem('zeroRecuerdos')) || [];
+        function guardarRecuerdo(texto) { const recuerdo = { id: Date.now(), texto: texto, fecha: new Date().toLocaleDateString('es-CL', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) }; recuerdos.push(recuerdo); localStorage.setItem('zeroRecuerdos', JSON.stringify(recuerdos)); actualizarMemoryPanel(); }
+        function buscarRecuerdo(palabraClave) { return recuerdos.filter(r => r.texto.toLowerCase().includes(palabraClave.toLowerCase())); }
+        function borrarRecuerdo(palabraClave) { const antes = recuerdos.length; recuerdos = recuerdos.filter(r => !r.texto.toLowerCase().includes(palabraClave.toLowerCase())); localStorage.setItem('zeroRecuerdos', JSON.stringify(recuerdos)); actualizarMemoryPanel(); return antes - recuerdos.length; }
+        function borrarTodosRecuerdos() { recuerdos = []; localStorage.removeItem('zeroRecuerdos'); actualizarMemoryPanel(); }
+        function actualizarMemoryPanel() { document.getElementById('memoryCount').textContent = recuerdos.length; }
+
+        function showMemoryList() {
+            const listContainer = document.getElementById('memoryList');
+            if (recuerdos.length === 0) { listContainer.innerHTML = `<div class="memory-empty"><div class="empty-icon">🧠</div><div>Aún no hay recuerdos guardados</div></div>`; return; }
+            let html = '<h4>📋 Mis Recuerdos</h4>';
+            [...recuerdos].reverse().forEach((r) => { html += `<div class="memory-item"><div class="item-text">${r.texto}</div><div class="item-date">📅 ${r.fecha}</div></div>`; });
+            listContainer.innerHTML = html;
+        }
+
+        function confirmarBorrarTodo() {
+            if (recuerdos.length === 0) { zeroHabla('No hay recuerdos para borrar.'); return; }
+            if (confirm(`¿Seguro que quieres que Zero olvide sus ${recuerdos.length} recuerdos?`)) {
+                borrarTodosRecuerdos(); zeroHabla('He borrado todos mis recuerdos.');
+                document.getElementById('memoryList').innerHTML = `<div class="memory-empty"><div class="empty-icon">✨</div><div>Memoria borrada</div></div>`;
+            }
+        }
+
+        function exportarMemoria() {
+            if (recuerdos.length === 0) { zeroHabla('No tengo recuerdos para exportar.'); return; }
+            const datos = JSON.stringify(recuerdos, null, 2);
+            const blob = new Blob([datos], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = `respaldo_memoria_zero_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+            zeroHabla(`Listo. He exportado ${recuerdos.length} recuerdos.`);
+        }
+
+        function importarMemoria() {
+            const input = document.createElement('input'); input.type = 'file'; input.accept = 'application/json';
+            input.onchange = (e) => {
+                const archivo = e.target.files[0]; if (!archivo) return;
+                const lector = new FileReader();
+                lector.onload = (evento) => {
+                    try { const datosImportados = JSON.parse(evento.target.result); if (Array.isArray(datosImportados)) { recuerdos = datosImportados; localStorage.setItem('zeroRecuerdos', JSON.stringify(recuerdos)); actualizarMemoryPanel(); showMemoryList(); zeroHabla(`¡Memoria restaurada! ${recuerdos.length} recuerdos.`); } }
+                    catch (error) { zeroHabla('No pude leer el archivo.'); }
+                };
+                lector.readAsText(archivo);
+            };
+            input.click();
+        }
+
+        // ===== VOZ =====
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition;
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition(); recognition.lang = 'es-CL'; recognition.continuous = false; recognition.interimResults = false;
+            recognition.onresult = (event) => { const textoEscuchado = event.results[0][0].transcript.toLowerCase(); procesarComando(textoEscuchado); };
+            recognition.onerror = () => { zeroHabla('No pude escucharte bien.'); };
+        }
+
+        function zeroHabla(texto) {
+            if ('speechSynthesis' in window) { window.speechSynthesis.cancel(); const utterance = new SpeechSynthesisUtterance(texto); utterance.lang = 'es-CL'; window.speechSynthesis.speak(utterance); }
+        }
+
+        function procesarComando(texto) {
+            if (texto.includes('recuerda que') || texto.includes('guarda esto') || texto.includes('anota que')) { let recuerdo = texto.split('recuerda que')[1] || texto.split('guarda esto')[1] || texto.split('anota que')[1]; if (recuerdo) { guardarRecuerdo(recuerdo.trim()); zeroHabla(`Listo, guardé: "${recuerdo.trim()}".`); } }
+            else if (texto.includes('qué te dije sobre') || texto.includes('qué recuerdas de')) { let palabraClave = texto.split('sobre')[1] || texto.split('de')[1]; if (palabraClave) { const resultados = buscarRecuerdo(palabraClave.trim()); if (resultados.length > 0) zeroHabla(`Sí recuerdo: "${resultados[resultados.length - 1].texto}".`); else zeroHabla(`No tengo recuerdos sobre "${palabraClave.trim()}".`); } }
+            else if (texto.includes('muéstrame todos') || texto.includes('qué sabes de mí')) { toggleMemory(); showMemoryList(); zeroHabla(`Tengo ${recuerdos.length} recuerdos.`); }
+            else if (texto.includes('olvida') || texto.includes('borra')) { let palabraClave = texto.split('olvida')[1] || texto.split('borra')[1]; if (palabraClave && palabraClave.includes('todos')) { borrarTodosRecuerdos(); zeroHabla('He borrado todos mis recuerdos.'); } else if (palabraClave) { const borrados = borrarRecuerdo(palabraClave.trim()); zeroHabla(borrados > 0 ? `Olvidé ${borrados} cosas.` : `No tengo recuerdos sobre eso.`); } }
+            else if (texto.includes('exporta tu memoria') || texto.includes('haz un respaldo')) { exportarMemoria(); }
+            else if (texto.includes('importa tu memoria') || texto.includes('restaura tu memoria')) { importarMemoria(); }
+            else if (texto.includes('hola') || texto.includes('buenos días')) { zeroHabla('¡Hola! Soy Zero. ¿En qué te ayudo?'); }
+            else if (texto.includes('hora')) { const ahora = new Date(); zeroHabla(`Son las ${ahora.getHours()} horas y ${ahora.getMinutes()} minutos.`); }
+            else if (texto.includes('clima') || texto.includes('temperatura') || texto.includes('tiempo')) { toggleWeather(); if (weatherData) { const current = weatherData.current; const weatherInfo = getWeatherInfo(current.weather_code); zeroHabla(`En ${ciudadActual.nombre} hay ${Math.round(current.temperature_2m)} grados, ${weatherInfo.desc}.`); } else { zeroHabla('Abriendo el clima.'); } }
+            else if (texto.includes('calendario') || texto.includes('fecha')) { toggleCalendar(); zeroHabla('Aquí tienes el calendario.'); }
+            else if (texto.includes('radio') || texto.includes('música')) { window.open('https://www.radiosdechile.cl', '_blank'); zeroHabla('Abriendo las radios de Chile.'); }
+            else if (texto.includes('calculadora')) { toggleCalc(); zeroHabla('Abriendo la calculadora.'); }
+            else if (texto.includes('ayuda')) { toggleHelp(); zeroHabla('Abriendo la guía de ayuda.'); }
+            else if (texto.includes('memoria') || texto.includes('recuerdos')) { toggleMemory(); zeroHabla('Abriendo el panel de memoria.'); }
+            else if (texto.includes('fondo') || texto.includes('background') || texto.includes('fondos')) { toggleBackground(); zeroHabla('Abriendo el panel de fondos.'); }
+            else if (texto.includes('whatsapp')) { window.open('https://web.whatsapp.com', '_blank'); zeroHabla('Abriendo WhatsApp.'); }
+            else if (texto.includes('telegram')) { window.open('https://web.telegram.org', '_blank'); zeroHabla('Abriendo Telegram.'); }
+            else if (texto.includes('gmail') || texto.includes('correo')) { window.open('https://mail.google.com', '_blank'); zeroHabla('Abriendo Gmail.'); }
+            else if (texto.includes('youtube') || texto.includes('videos')) { window.open('https://www.youtube.com', '_blank'); zeroHabla('Abriendo YouTube.'); }
+            else if (texto.includes('traductor') || texto.includes('traducir')) { window.open('https://translate.google.com', '_blank'); zeroHabla('Abriendo el traductor.'); }
+            else if (texto.includes('adiós') || texto.includes('chao')) { zeroHabla('¡Hasta luego!'); }
+            else { zeroHabla('No entendí eso. Prueba con "calculadora", "clima" o "cambia el fondo".'); }
+        }
+
+        function activarMicrofono() { if (recognition) { zeroHabla('Te escucho...'); recognition.start(); } else { alert('Tu navegador no soporta voz.'); } }
+        function activarAltavoz() { zeroHabla('¡Hola! Mi voz funciona perfecto. Soy Zero.'); }
+
+        function toggleMemory() {
+            const panel = document.getElementById('memoryPanel');
+            const isActive = panel.classList.contains('active');
+            panel.classList.toggle('active');
+            document.getElementById('weatherPanel').classList.remove('active');
+            document.getElementById('calendarPanel').classList.remove('active');
+            document.getElementById('helpPanel').classList.remove('active');
+            document.getElementById('calcPanel').classList.remove('active');
+            document.getElementById('backgroundPanel').classList.remove('active');
+            document.getElementById('overlay').classList.toggle('active');
+            if (!isActive) actualizarMemoryPanel();
+        }
+
+        // ===== CALCULADORA =====
+        let calcExpression = ''; let calcHistoryText = '';
+        function calcAppend(value) { calcExpression += value; document.getElementById('calcResult').textContent = calcExpression.replace(/\*/g, '×').replace(/\//g, '÷'); }
+        function calcClear() { calcExpression = ''; calcHistoryText = ''; document.getElementById('calcResult').textContent = '0'; document.getElementById('calcHistory').textContent = ''; }
+        function calcDelete() { calcExpression = calcExpression.slice(0, -1); document.getElementById('calcResult').textContent = calcExpression ? calcExpression.replace(/\*/g, '×').replace(/\//g, '÷') : '0'; }
+        function calcEqual() {
+            if (!calcExpression) return;
+            try { let expr = calcExpression.replace(/%/g, '/100'); const result = Function('"use strict";return (' + expr + ')')(); calcHistoryText = calcExpression.replace(/\*/g, '×').replace(/\//g, '÷') + ' ='; document.getElementById('calcHistory').textContent = calcHistoryText; let formattedResult = Number.isInteger(result) ? result : parseFloat(result.toFixed(8)); document.getElementById('calcResult').textContent = formattedResult; calcExpression = String(formattedResult); }
+            catch (error) { document.getElementById('calcResult').textContent = 'Error'; calcExpression = ''; }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            const calcPanel = document.getElementById('calcPanel');
+            if (!calcPanel.classList.contains('active')) return;
+            if (e.key >= '0' && e.key <= '9') calcAppend(e.key);
+            else if (e.key === '.') calcAppend('.');
+            else if (e.key === '+' || e.key === '-' || e.key === '*' || e.key === '/') calcAppend(e.key);
+            else if (e.key === '%') calcAppend('%');
+            else if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); calcEqual(); }
+            else if (e.key === 'Backspace') calcDelete();
+            else if (e.key === 'Escape') { calcClear(); closeAllPanels(); }
+        });
+
+        // ===== PANELES =====
+        function toggleCalendar() { document.getElementById('calendarPanel').classList.toggle('active'); document.getElementById('weatherPanel').classList.remove('active'); document.getElementById('helpPanel').classList.remove('active'); document.getElementById('calcPanel').classList.remove('active'); document.getElementById('memoryPanel').classList.remove('active'); document.getElementById('backgroundPanel').classList.remove('active'); document.getElementById('overlay').classList.toggle('active'); }
+        function toggleWeather() { const panel = document.getElementById('weatherPanel'); const isActive = panel.classList.contains('active'); document.getElementById('weatherPanel').classList.toggle('active'); document.getElementById('calendarPanel').classList.remove('active'); document.getElementById('helpPanel').classList.remove('active'); document.getElementById('calcPanel').classList.remove('active'); document.getElementById('memoryPanel').classList.remove('active'); document.getElementById('backgroundPanel').classList.remove('active'); document.getElementById('overlay').classList.toggle('active'); if (!isActive) cargarClima(); }
+        function toggleHelp() { document.getElementById('helpPanel').classList.toggle('active'); document.getElementById('weatherPanel').classList.remove('active'); document.getElementById('calendarPanel').classList.remove('active'); document.getElementById('calcPanel').classList.remove('active'); document.getElementById('memoryPanel').classList.remove('active'); document.getElementById('backgroundPanel').classList.remove('active'); document.getElementById('overlay').classList.toggle('active'); }
+        function toggleCalc() { document.getElementById('calcPanel').classList.toggle('active'); document.getElementById('weatherPanel').classList.remove('active'); document.getElementById('calendarPanel').classList.remove('active'); document.getElementById('helpPanel').classList.remove('active'); document.getElementById('memoryPanel').classList.remove('active'); document.getElementById('backgroundPanel').classList.remove('active'); document.getElementById('overlay').classList.toggle('active'); }
+        function closeAllPanels() { document.getElementById('weatherPanel').classList.remove('active'); document.getElementById('calendarPanel').classList.remove('active'); document.getElementById('helpPanel').classList.remove('active'); document.getElementById('calcPanel').classList.remove('active'); document.getElementById('memoryPanel').classList.remove('active'); document.getElementById('backgroundPanel').classList.remove('active'); document.getElementById('overlay').classList.remove('active'); }
+
+        function actualizarReloj() { const ahora = new Date(); document.getElementById('horaActual').textContent = `${String(ahora.getHours()).padStart(2,'0')}:${String(ahora.getMinutes()).padStart(2,'0')}:${String(ahora.getSeconds()).padStart(2,'0')}`; }
+        actualizarReloj(); setInterval(actualizarReloj, 1000);
+
+        function cambiarTema() { document.body.classList.toggle('light-theme'); document.querySelector('.btn-tema .icon').textContent = document.body.classList.contains('light-theme') ? '☀️' : '🌙'; }
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAllPanels(); });
+
+        cargarClima(); actualizarMemoryPanel(); loadButtonOrder(); initDragAndDrop();
+    </script>
+</body>
+</html>

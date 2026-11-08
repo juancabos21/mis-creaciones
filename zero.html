@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zero - Asistente Virtual | Mis Creaciones</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: white; 
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .btn-volver {
+            display: inline-block;
+            color: #00d4ff;
+            text-decoration: none;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+            padding: 0.5rem 1rem;
+            border: 2px solid #00d4ff;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        
+        .btn-volver:hover {
+            background: #00d4ff;
+            color: #0f0c29;
+        }
+        
+        .hero {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .hero img {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 20px;
+            border: 3px solid #00d4ff;
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.4);
+            margin-bottom: 1.5rem;
+        }
+        
+        .hero h1 {
+            font-size: 2.5rem;
+            color: #00d4ff;
+            margin-bottom: 0.5rem;
+        }
+        
+        .precio-grande {
+            font-size: 3rem;
+            color: #ffd700;
+            font-weight: bold;
+            margin: 1rem 0;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+        
+        .descripcion {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            margin-bottom: 2rem;
+        }
+        
+        .descripcion h2 {
+            color: #00d4ff;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+        
+        .descripcion ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .descripcion li {
+            padding: 0.8rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            color: #ddd;
+            font-size: 1.05rem;
+        }
+        
+        .descripcion li:last-child {
+            border-bottom: none;
+        }
+        
+        .descripcion li::before {
+            content: "✅ ";
+            margin-right: 0.5rem;
+        }
+        
+        .paso-compra {
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid #ffd700;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .paso-compra h2 {
+            color: #ffd700;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.5rem;
+        }
+        
+        .paso {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+        }
+        
+        .paso-numero {
+            background: #ffd700;
+            color: #0f0c29;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+        
+        .paso-texto h3 {
+            color: #ffd700;
+            margin-bottom: 0.3rem;
+        }
+        
+        .paso-texto p {
+            color: #ccc;
+            line-height: 1.5;
+        }
+        
+        .datos-transferencia {
+            background: rgba(0, 212, 255, 0.1);
+            border: 2px solid #00d4ff;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+        
+        .datos-transferencia h3 {
+            color: #00d4ff;
+            margin-bottom: 1rem;
+        }
+        
+        .dato {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .dato:last-child {
+            border-bottom: none;
+        }
+        
+        .dato-label {
+            color: #aaa;
+        }
+        
+        .dato-valor {
+            color: white;
+            font-weight: bold;
+        }
+        
+        .btn-whatsapp {
+            display: block;
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            color: white;
+            padding: 1.2rem;
+            border-radius: 15px;
+            text-align: center;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-top: 1rem;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-whatsapp:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 25px rgba(37, 211, 102, 0.5);
+        }
+        
+        .garantia {
+            text-align: center;
+            padding: 1.5rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            margin-top: 2rem;
+        }
+        
+        .garantia h3 {
+            color: #10b981;
+            margin-bottom: 0.5rem;
+        }
+        
+        .garantia p {
+            color: #aaa;
+        }
+        
+        @media (max-width: 600px) {
+            .hero h1 { font-size: 2rem; }
+            .precio-grande { font-size: 2.5rem; }
+            .paso { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="btn-volver">← Volver al inicio</a>
+        
+        <div class="hero">
+            <img src="zero-preview.png" alt="Zero Asistente Virtual">
+            <h1>🤖 Zero - Asistente Virtual</h1>
+            <p style="color: #aaa; font-size: 1.1rem;">Tu propio asistente personal en el celular</p>
+            <div class="precio-grande">$5.000 CLP</div>
+        </div>
+
+        <div class="descripcion">
+            <h2>📋 ¿Qué incluye Zero?</h2>
+            <ul>
+                <li>Clima en tiempo real de cualquier ciudad de Chile</li>
+                <li>Calendario completo con feriados chilenos 2026</li>
+                <li>Calculadora científica integrada</li>
+                <li>Memoria inteligente (Zero recuerda lo que le dices)</li>
+                <li>Comandos de voz (háblale y te responde)</li>
+                <li>Personalización de fondos (colores e imágenes)</li>
+                <li>Botones arrastrables (organízalos como quieras)</li>
+                <li>Accesos directos a TikTok, Instagram, Spotify, Netflix y más</li>
+                <li>Diseño responsive (se ve perfecto en celular y PC)</li>
+                <li>Funciona 100% en el navegador, sin instalar nada</li>
+            </ul>
+        </div>
+
+        <div class="paso-compra">
+            <h2>💰 ¿Cómo comprar?</h2>
+            
+            <div class="paso">
+                <div class="paso-numero">1</div>
+                <div class="paso-texto">
+                    <h3>Transfiere $5.000 CLP</h3>
+                    <p>Haz una transferencia a la siguiente cuenta:</p>
+                    
+                    <div class="datos-transferencia">
+                        <h3>📊 Datos bancarios</h3>
+                        <div class="dato">
+                            <span class="dato-label">Banco:</span>
+                            <span class="dato-valor">[Tu banco aquí]</span>
+                        </div>
+                        <div class="dato">
+                            <span class="dato-label">Tipo de cuenta:</span>
+                            <span class="dato-valor">[Corriente/Vista]</span>
+                        </div>
+                        <div class="dato">
+                            <span class="dato-label">Número:</span>
+                            <span class="dato-valor">[Tu número]</span>
+                        </div>
+                        <div class="dato">
+                            <span class="dato-label">RUT:</span>
+                            <span class="dato-valor">[Tu RUT]</span>
+                        </div>
+                        <div class="dato">
+                            <span class="dato-label">Nombre:</span>
+                            <span class="dato-valor">[Tu nombre]</span>
+                        </div>
+                        <div class="dato">
+                            <span class="dato-label">Email:</span>
+                            <span class="dato-valor">juancabos21@gmail.com</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="paso">
+                <div class="paso-numero">2</div>
+                <div class="paso-texto">
+                    <h3>Envía el comprobante por WhatsApp</h3>
+                    <p>Haz una captura de pantalla de la transferencia y envíamela por WhatsApp. Te responderé en minutos.</p>
+                </div>
+            </div>
+            
+            <div class="paso">
+                <div class="paso-numero">3</div>
+                <div class="paso-texto">
+                    <h3>Recibe tu QR al instante</h3>
+                    <p>Te enviaré el código QR de Zero por WhatsApp. Lo escaneas con tu celular y ¡listo! Zero será tuyo para siempre.</p>
+                </div>
+            </div>
+            
+            <a href="https://wa.me/569XXXXXXXX?text=Hola!%20Quiero%20comprar%20Zero%20(el%20asistente%20virtual).%20Ya%20hice%20la%20transferencia." 
+               class="btn-whatsapp" 
+               target="_blank">
+                📲 Enviar comprobante por WhatsApp
+            </a>
+        </div>
+
+        <div class="garantia">
+            <h3>✅ Garantía de satisfacción</h3>
+            <p>Si tienes algún problema con Zero, te ayudo a configurarlo sin costo adicional. Atención personalizada y directa.</p>
+        </div>
+    </div>
+</body>
+</html>
